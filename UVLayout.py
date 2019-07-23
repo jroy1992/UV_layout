@@ -272,10 +272,14 @@ def get_origin(start_tile, use_current_tile, shell):
     return start_origin
 
 
-def get_shells_per_tile(topology_shell, shell_spacing, tile_height=1.0, tile_width=1.0):
+def get_shells_per_tile(topology_shell, shell_spacing, use_stacking, stack_columns, tile_height=1.0, tile_width=1.0):
     shell = Shell(topology_shell, shell_spacing)
-    shells_per_row = floor(tile_width / shell.width)
-    shells_per_column = floor(tile_height / shell.height)
+    if use_stacking:
+        shells_per_row = floor(tile_width / (shell.width*stack_columns))*stack_columns
+        shells_per_column = floor(tile_height / (shell.height*stack_columns))*stack_columns
+    else:
+        shells_per_row = floor(tile_width / shell.width)
+        shells_per_column = floor(tile_height / shell.height)
     shells_per_tile = shells_per_row * shells_per_column
     return floor(shells_per_tile)
 
@@ -329,7 +333,7 @@ def run_arrangement(start_tile, shell_spacing, use_current_tile, use_stacking, s
 
     for topology in topology_groups:
         shells = topology_groups[topology]
-        shells_per_tile = int(get_shells_per_tile(shells[0], shell_spacing))
+        shells_per_tile = int(get_shells_per_tile(shells[0], shell_spacing, use_stacking, stack_columns))
         if shells_per_tile:
             tile_info = tile_requirement_per_topology(topology, shells, shell_spacing, shells_per_tile)
             arrange_shells_for_topology(tile_info[topology], shell_spacing, use_stacking, stack_columns)
@@ -338,6 +342,8 @@ def run_arrangement(start_tile, shell_spacing, use_current_tile, use_stacking, s
                 unarranged.add(parent_dict[str(shell)])
     if unarranged:
         notify_unarranged_nodes(unarranged)
+    else:
+        cmds.confirmDialog(title="Success", message="All meshes arranged successfully!", button="OK")
     cmds.select(selection)
 
 
@@ -363,5 +369,4 @@ def main():
 
 
 if __name__ == '__main__':
-    ui = UI()
-    ui.create_ui()
+    main()
